@@ -1,8 +1,8 @@
 # Sentinel Blue Azure Log Analytics output plugin for Logstash
 
-Azure Sentinel provides an output plugin for Logstash. Using this output plugin, you will be able to send any log you want using Logstash to the Azure Sentinel/Log Analytics workspace
-Today you will be able to send messages to custom logs table that you will define in the output plugin.
-[Getting started with Logstash](<https://www.elastic.co/guide/en/logstash/current/getting-started-with-logstash.html>)
+Sentinel Blue provides an updated output plugin for Logstash. Using this output plugin, you will be able to send any log you want using Logstash to the Azure Sentinel/Log Analytics workspace using dynamic custom table names.
+
+This allows you to set your destination table in your filtering process and reference it in the output.
 
 Azure Sentinel output plugin uses the rest API integration to Log Analytics, in order to ingest the logs into custom logs tables [What are custom logs tables](<https://docs.microsoft.com/azure/azure-monitor/platform/data-sources-custom-logs>)
 
@@ -15,15 +15,20 @@ Released on: 2022-10-20
 
 This plugin is currently in development and is free to use. We welcome contributions from the open source community on this project, and we request and appreciate feedback from users.
 
+<https://rubygems.org/gems/sentinelblue-logstash-output-azure-loganalytics>
+
 ## Support
 
 For issues regarding the output plugin please open a support issue here. Create a new issue describing the problem so that we can assist you.
 
 ## Installation
 
-Azure Sentinel provides Logstash an output plugin to Log analytics workspace.
 Install the sentinelblue-logstash-output-azure-loganalytics, use [Logstash Working with plugins](<https://www.elastic.co/guide/en/logstash/current/working-with-plugins.html>) document.
 For offline setup follow [Logstash Offline Plugin Management instruction](<https://www.elastic.co/guide/en/logstash/current/offline-plugins.html>).
+
+```bash
+logstash-plugin install sentinelblue-logstash-output-azure-loganalytics
+```
 
 Required Logstash version: between 7.0+
 
