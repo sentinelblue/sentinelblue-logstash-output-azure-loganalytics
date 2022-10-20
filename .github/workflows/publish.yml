@@ -30,9 +30,8 @@ jobs:
       env:
         GEM_HOST_API_KEY: "${{secrets.RUBYGEM_API_KEY}}"
 
+    - name: Building the Gem
+      run: gem build *.gemspec
+
     - name: Publish to RubyGems
-      run: |
-        bundle install
-        bundle exec rake vendor
-        bundle exec rspec
-        bundle exec rake publish_gem
+      run: gem push *.gem
