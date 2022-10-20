@@ -2,7 +2,7 @@
 
 Sentinel Blue provides an updated output plugin for Logstash. Using this output plugin, you will be able to send any log you want using Logstash to the Azure Sentinel/Log Analytics workspace using dynamic custom table names.
 
-This allows you to set your destination table in your filtering process and reference it in the output.
+This allows you to set your destination table in your filtering process and reference it in the output plugin. The original plugin functionality has been preserved as well.
 
 Azure Sentinel output plugin uses the rest API integration to Log Analytics, in order to ingest the logs into custom logs tables [What are custom logs tables](<https://docs.microsoft.com/azure/azure-monitor/platform/data-sources-custom-logs>)
 
