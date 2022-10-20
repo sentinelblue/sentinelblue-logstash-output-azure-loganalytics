@@ -9,7 +9,7 @@ Azure Sentinel output plugin uses the rest API integration to Log Analytics, in 
 This plugin is based on the original provided by the Azure Sentinel team. View the original plugin here: <https://github.com/Azure/Azure-Sentinel/tree/master/DataConnectors/microsoft-logstash-output-azure-loganalytics>
 
 ```text
-Plugin version: v1.1.0
+Plugin version: v1.1.1
 Released on: 2022-10-20
 ```
 

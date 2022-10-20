@@ -1,0 +1,33 @@
+
+name: Publish Plugin
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish to RubyGems
+    env:
+      RUBYGEM_API_KEY: ${{ secrets.RUBYGEM_API_KEY }}
+
+    steps:
+    - uses: actions/checkout@main
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+
+    - name: Set API Key
+      run: |
+        echo "$RUBYGEM_API_KEY" > ~/.gem/credentials
+        chmod 0600 ~/.gem/credentials
+    - name: Install dependencies
+      run: bundle install
+
+    - name: Build
+      run: |
+        bundle exec rake vendor
+        bundle exec rspec
+
+    - name: Publish
+      run: bundle exec rake publish_gem
