@@ -1,4 +1,4 @@
-name: Ruby Gem
+name: Publish to RubyGems
 
 on:
   workflow_dispatch:
@@ -11,26 +11,26 @@ jobs:
   build:
     name: Build + Publish
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Ruby 2.6
-      uses: actions/setup-ruby@v1
-      with:
-        ruby-version: 2.6.x
 
-    - name: Publish to RubyGems
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.0
+
+    - name: Set Access to RubyGems
       run: |
         mkdir -p $HOME/.gem
         touch $HOME/.gem/credentials
         chmod 0600 $HOME/.gem/credentials
         printf -- "---\n:rubygems_api_key: ${GEM_HOST_API_KEY}\n" > $HOME/.gem/credentials
+      env:
+        GEM_HOST_API_KEY: "${{secrets.RUBYGEM_API_KEY}}"
+
+    - name: Publish to RubyGems
         bundle install
         bundle exec rake vendor
         bundle exec rspec
         bundle exec rake publish_gem
-      env:
-        GEM_HOST_API_KEY: "${{secrets.RUBYGEM_API_KEY}}"
