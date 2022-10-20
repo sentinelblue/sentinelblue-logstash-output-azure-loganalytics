@@ -2,6 +2,8 @@ name: Publish to RubyGems
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
   #push:
   #  branches: [ "main" ]
   #pull_request:
