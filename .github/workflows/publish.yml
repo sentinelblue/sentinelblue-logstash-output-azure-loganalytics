@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout repository
     - uses: actions/checkout@v3
 
     - name: Set up Ruby
@@ -30,6 +31,7 @@ jobs:
         GEM_HOST_API_KEY: "${{secrets.RUBYGEM_API_KEY}}"
 
     - name: Publish to RubyGems
+      run: |
         bundle install
         bundle exec rake vendor
         bundle exec rspec
