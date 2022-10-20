@@ -19,6 +19,7 @@ jobs:
 
     - name: Set API Key
       run: |
+        mkdir ~/.gem
         echo "$RUBYGEM_API_KEY" > ~/.gem/credentials
         chmod 0600 ~/.gem/credentials
     - name: Install dependencies
