@@ -1,11 +1,11 @@
 Gem::Specification.new do |s|
   s.name = 'sentinelblue-logstash-output-azure-loganalytics'
   s.version    =  File.read("VERSION").strip
-  s.authors = ["Ron Marsiano", "Haim Rubinstein"]
-  s.email = "romarsia@outlook.com"
-  s.summary = %q{Azure Sentinel provides a new output plugin for Logstash. Using this output plugin, you will be able to send any log you want using Logstash to the Azure Sentinel/Log Analytics workspace}
+  s.authors = ["Anthony Malagisi", "Ben Wheat"]
+  s.email = "dev@sentinelblue.com"
+  s.summary = %q{Sentinel Blue provides an updates plugin outputing to Azure Sentinel for Logstash. Using this output plugin, you will be able to send any log you want using Logstash to the Azure Sentinel/Log Analytics workspace. You can utilize a dynamic table name during output to simplify complex table schemes.}
   s.description = s.summary
-  s.homepage = "https://github.com/Azure/Azure-Sentinel"
+  s.homepage = "https://github.com/sentinelblue/sentinelblue-logstash-output-azure-loganalytics"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
 

@@ -65,7 +65,7 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
     @logstash_configuration= build_logstash_configuration()
     # Validate configuration correctness 
     @logstash_configuration.validate_configuration()
-    @logger.info("Logstash Azure Loganalytics output plugin configuration was found valid")
+    @logger.info("Logstash Sentinel Blue Azure Log Analytics output plugin configuration was found valid")
 
     # Initialize the logstash resizable buffer
     # This buffer will increase and decrease size according to the amount of messages inserted.
