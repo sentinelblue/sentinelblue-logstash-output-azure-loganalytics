@@ -89,7 +89,7 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
       custom_table_name = ""
 
       # Check if the table name is static or dynamic
-      if @custom_log_table_name.match(/^[[:alpha:][:digit:]_]+$/)
+      if @custom_log_table_name.match(/^[a-zA-Z][[:alpha:][:digit:]_]*$/)
         # Table name is static.
         custom_table_name = @custom_log_table_name
 
@@ -100,27 +100,25 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
 
       else
         # Incorrect format
-        @logger.warn("custom_log_table_name must be either a static name consisting only of numbers, letters, and underscores OR a dynamic table name of the format used by logstash (e.g. %{field_name}, %{[nested][field]}.")
+        @logger.error("custom_log_table_name must be either a static name consisting only of numbers, letters, and underscores OR a dynamic table name of the format used by logstash (e.g. %{field_name}, %{[nested][field]}.")
         break
 
       end
 
       # Check that the table name is a string, exists, and is les than 100 characters
-      if !custom_table_name.is_a?(String)
-        @logger.warn("The custom table name must be a string. If you used a dynamic name from one of the log fields, make sure it is a string.")
-        break
+      if !custom_table_name.match(/^[a-zA-Z][[:alpha:][:digit:]_]*$/)
+        @logger.error("The custom table name must start with a letter and only consist of letters, numbers, and/or underscores (_). Also check the field name used. If it doesn't exist, you will also receive this error.")
+        next
         
       elsif custom_table_name.empty? or custom_table_name.nil?
-        @logger.warn("The custom table name is empty. If you used a dynamic name from one of the log fields, check that it exists.")
-        break
+        @logger.error("The custom table name is empty. Make sure the field you used always returns a table name.")
+        next
 
       elsif custom_table_name.length > 100
-        @logger.warn("The custom table name must not exceed 100 characters")
-        break
+        @logger.error("The custom table name must not exceed 100 characters")
+        next
 
       end
-
-      @logger.info("Custom table name #{custom_table_name} is valid")
 
       # Determine if there is a buffer for the given table
       if buffers.keys.include?(custom_table_name)
@@ -167,7 +165,7 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
   # Building the logstash object configuration from the output configuration provided by the user
   # Return LogstashLoganalyticsOutputConfiguration populated with the configuration values
   def build_logstash_configuration()
-    logstash_configuration= LogstashLoganalyticsOutputConfiguration::new(@workspace_id, @workspace_key, @logger)    
+    logstash_configuration= LogstashLoganalyticsOutputConfiguration::new(@workspace_id, @workspace_key, @custom_log_table_name, @logger)    
     logstash_configuration.endpoint = @endpoint
     logstash_configuration.time_generated_field = @time_generated_field
     logstash_configuration.key_names = @key_names

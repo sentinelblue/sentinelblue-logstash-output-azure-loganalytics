@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.summary       = %q{Sentinel Blue provides a plugin outputing to Azure Sentinel for Logstash. Using this output plugin, you will be able to send any log you want using Logstash to the Azure Sentinel/Log Analytics workspace. You can utilize a dynamic table name during output to simplify complex table schemes.}
   s.description   = s.summary
   s.homepage      = "https://github.com/sentinelblue/sentinelblue-logstash-output-azure-loganalytics"
-  s.licenses      = ['Apache License (2.0)']
+  s.licenses      = ['Apache-2.0']
   s.require_paths = ["lib"]
 
   # Files

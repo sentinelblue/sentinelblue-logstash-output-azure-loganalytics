@@ -1,8 +1,9 @@
 # encoding: utf-8
 class LogstashLoganalyticsOutputConfiguration
-    def initialize(workspace_id, workspace_key, logger)
+    def initialize(workspace_id, workspace_key, custom_log_table_name, logger)
         @workspace_id = workspace_id
         @workspace_key = workspace_key
+        @custom_log_table_name = custom_log_table_name
         @logger = logger
 
         # Delay between each resending of a message
@@ -24,8 +25,14 @@ class LogstashLoganalyticsOutputConfiguration
         elsif @max_items < @MIN_MESSAGE_AMOUNT
             raise ArgumentError, "Setting max_items to value must be greater then #{@MIN_MESSAGE_AMOUNT}."
 
-        elsif @workspace_id.empty? or @workspace_key.empty? 
-            raise ArgumentError, "Malformed configuration , the following arguments can not be null or empty.[workspace_id=#{@workspace_id} , workspace_key=#{@workspace_key}]"
+        elsif @workspace_id.empty? or @workspace_key.empty? or @custom_log_table_name.empty?
+            raise ArgumentError, "Malformed configuration , the following arguments can not be null or empty.[workspace_id=#{@workspace_id} , workspace_key=#{@workspace_key} , custom_log_table_name=#{@custom_log_table_name}]"
+
+        elsif !@custom_log_table_name.match(/^[a-zA-Z][[:alpha:][:digit:]_]*$/) and !@custom_log_table_name.match(/^%{((\[[\w_\-@]*\])*)([\w_\-@]*)}$/)
+            raise ArgumentError, "custom_log_table_name must be either a static name starting with a letter and consisting only of numbers, letters, and underscores OR a dynamic table name of the format used by logstash (e.g. %{field_name}, %{[nested][field]}."
+
+        elsif @custom_log_table_name.match(/^[a-zA-Z][[:alpha:][:digit:]_]*$/) and @custom_log_table_name.length > 100
+            raise ArgumentError, "custom_log_table_name must not exceed 100 characters"
             
         elsif @key_names.length > 500
             raise ArgumentError, 'Azure Loganalytics limits the amount of columns to 500 in each table.' 
@@ -75,6 +82,10 @@ class LogstashLoganalyticsOutputConfiguration
 
     def workspace_key
         @workspace_key
+    end
+
+    def custom_log_table_name
+        @custom_log_table_name
     end
 
     def endpoint
