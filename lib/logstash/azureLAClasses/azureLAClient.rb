@@ -1,18 +1,18 @@
 # encoding: utf-8
-require "logstash/logAnalyticsClient/logstashLoganalyticsConfiguration"
+require "logstash/azureLAClasses/logAnalyticsConfiguration"
 require 'rest-client'
 require 'json'
 require 'openssl'
 require 'base64'
 require 'time'
 
-class LogAnalyticsClient
+class AzureLAClient
   API_VERSION = '2016-04-01'.freeze
 
-  def initialize (logstashLoganalyticsConfiguration)
-    @logstashLoganalyticsConfiguration = logstashLoganalyticsConfiguration
-    set_proxy(@logstashLoganalyticsConfiguration.proxy)
-    @uri = sprintf("https://%s.%s/api/logs?api-version=%s", @logstashLoganalyticsConfiguration.workspace_id, @logstashLoganalyticsConfiguration.endpoint, API_VERSION)
+  def initialize (logAnalyticsConfiguration)
+    @logAnalyticsConfiguration = logAnalyticsConfiguration
+    set_proxy(@logAnalyticsConfiguration.proxy)
+    @uri = sprintf("https://%s.%s/api/logs?api-version=%s", @logAnalyticsConfiguration.workspace_id, @logAnalyticsConfiguration.endpoint, API_VERSION)
   end # def initialize
 
 
@@ -39,8 +39,8 @@ class LogAnalyticsClient
       'Authorization' => signature(date, body_bytesize_length),
       'Log-Type' => custom_table_name,
       'x-ms-date' => date,
-      'time-generated-field' =>  @logstashLoganalyticsConfiguration.time_generated_field,
-      'x-ms-AzureResourceId' => @logstashLoganalyticsConfiguration.azure_resource_id
+      'time-generated-field' =>  @logAnalyticsConfiguration.time_generated_field,
+      'x-ms-AzureResourceId' => @logAnalyticsConfiguration.azure_resource_id
     }
   end # def get_header
 
@@ -61,10 +61,10 @@ class LogAnalyticsClient
   def signature(date, body_bytesize_length)
     sigs = sprintf("POST\n%d\napplication/json\nx-ms-date:%s\n/api/logs", body_bytesize_length, date)
     utf8_sigs = sigs.encode('utf-8')
-    decoded_shared_key = Base64.decode64(@logstashLoganalyticsConfiguration.workspace_key)
+    decoded_shared_key = Base64.decode64(@logAnalyticsConfiguration.workspace_key)
     hmac_sha256_sigs = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), decoded_shared_key, utf8_sigs)
     encoded_hash = Base64.encode64(hmac_sha256_sigs)
-    authorization = sprintf("SharedKey %s:%s", @logstashLoganalyticsConfiguration.workspace_id, encoded_hash)
+    authorization = sprintf("SharedKey %s:%s", @logAnalyticsConfiguration.workspace_id, encoded_hash)
     
     return authorization
   end # def signature

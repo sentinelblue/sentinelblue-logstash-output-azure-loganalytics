@@ -2,8 +2,8 @@
 require "logstash/outputs/base"
 require "logstash/namespace"
 require "stud/buffer"
-require "logstash/logAnalyticsClient/logStashAutoResizeBuffer"
-require "logstash/logAnalyticsClient/logstashLoganalyticsConfiguration"
+require "logstash/azureLAClasses/logAnalyticsAutoResizeBuffer"
+require "logstash/azureLAClasses/logAnalyticsConfiguration"
 
 class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
 
@@ -70,7 +70,7 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
     # Initialize the logstash resizable buffer
     # This buffer will increase and decrease size according to the amount of messages inserted.
     # If the buffer reached the max amount of messages the amount will be increased until the limit
-    # @logstash_resizable_event_buffer=LogStashAutoResizeBuffer::new(@logstash_configuration)
+    # @logstash_resizable_event_buffer=LogAnalyticsAutoResizeBuffer::new(@logstash_configuration)
 
   end # def register
 
@@ -127,7 +127,7 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
     
       else
         # If the buffer doesn't exist for the table, create one and add the document
-        buffers[custom_table_name] = LogStashAutoResizeBuffer::new(@logstash_configuration,custom_table_name)
+        buffers[custom_table_name] = LogAnalyticsAutoResizeBuffer::new(@logstash_configuration,custom_table_name)
         @logger.trace("Adding event document - " + event.to_s)
         buffers[custom_table_name].add_event_document(document)
 
@@ -163,9 +163,9 @@ class LogStash::Outputs::AzureLogAnalytics < LogStash::Outputs::Base
   end # def create_event_document
 
   # Building the logstash object configuration from the output configuration provided by the user
-  # Return LogstashLoganalyticsOutputConfiguration populated with the configuration values
+  # Return LogAnalyticsConfiguration populated with the configuration values
   def build_logstash_configuration()
-    logstash_configuration= LogstashLoganalyticsOutputConfiguration::new(@workspace_id, @workspace_key, @custom_log_table_name, @logger)    
+    logstash_configuration= LogAnalyticsConfiguration::new(@workspace_id, @workspace_key, @custom_log_table_name, @logger)    
     logstash_configuration.endpoint = @endpoint
     logstash_configuration.time_generated_field = @time_generated_field
     logstash_configuration.key_names = @key_names

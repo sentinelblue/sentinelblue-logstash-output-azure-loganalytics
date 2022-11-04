@@ -1,5 +1,5 @@
 # encoding: utf-8
-class LogstashLoganalyticsOutputConfiguration
+class LogAnalyticsConfiguration
     def initialize(workspace_id, workspace_key, custom_log_table_name, logger)
         @workspace_id = workspace_id
         @workspace_key = workspace_key

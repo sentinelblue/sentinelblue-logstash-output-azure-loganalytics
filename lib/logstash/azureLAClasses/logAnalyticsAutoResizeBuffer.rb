@@ -1,23 +1,23 @@
 # encoding: utf-8
 require "stud/buffer"
-require "logstash/logAnalyticsClient/logAnalyticsClient"
+require "logstash/azureLAClasses/azureLAClient"
 require "stud/buffer"
-require "logstash/logAnalyticsClient/logstashLoganalyticsConfiguration"
+require "logstash/azureLAClasses/logAnalyticsConfiguration"
 
-# LogStashAutoResizeBuffer class setting a resizable buffer which is flushed periodically
+# LogAnalyticsAutoResizeBuffer class setting a resizable buffer which is flushed periodically
 # The buffer resize itself according to Azure Loganalytics  and configuration limitations
-class LogStashAutoResizeBuffer
+class LogAnalyticsAutoResizeBuffer
     include Stud::Buffer
 
-    def initialize(logstashLoganalyticsConfiguration,custom_table_name)
-        @logstashLoganalyticsConfiguration = logstashLoganalyticsConfiguration
-        @logger = @logstashLoganalyticsConfiguration.logger
+    def initialize(logAnalyticsConfiguration,custom_table_name)
+        @logAnalyticsConfiguration = logAnalyticsConfiguration
+        @logger = @logAnalyticsConfiguration.logger
         @custom_log_table_name = custom_table_name
-        @client=LogAnalyticsClient::new(logstashLoganalyticsConfiguration)
+        @client=AzureLAClient::new(logAnalyticsConfiguration)
         buffer_initialize(
-          :max_items => logstashLoganalyticsConfiguration.max_items,
-          :max_interval => logstashLoganalyticsConfiguration.plugin_flush_interval,
-          :logger => @logstashLoganalyticsConfiguration.logger
+          :max_items => logAnalyticsConfiguration.max_items,
+          :max_interval => logAnalyticsConfiguration.plugin_flush_interval,
+          :logger => @logAnalyticsConfiguration.logger
         )
     end # initialize
 
@@ -41,7 +41,7 @@ class LogStashAutoResizeBuffer
         # We send Json in the REST request 
         documents_json = documents.to_json
         # Setting resizing to true will cause changing the max size
-        if @logstashLoganalyticsConfiguration.amount_resizing == true
+        if @logAnalyticsConfiguration.amount_resizing == true
             # Resizing the amount of messages according to size of message received and amount of messages
             change_message_limit_size(documents.length, documents_json.bytesize)
         end
@@ -60,12 +60,12 @@ class LogStashAutoResizeBuffer
                 @logger.info("Successfully posted #{amount_of_documents} logs into custom log analytics table[#{@custom_log_table_name}].")
             else
                 @logger.error("DataCollector API request failure: error code: #{response.code}, data=>" + (documents.to_json).to_s)
-                resend_message(documents_json, amount_of_documents, @logstashLoganalyticsConfiguration.retransmission_time)
+                resend_message(documents_json, amount_of_documents, @logAnalyticsConfiguration.retransmission_time)
             end
             rescue Exception => ex
                 @logger.error("Exception in posting data to Azure Loganalytics. [Exception: '#{ex}]'")
                 @logger.trace("Exception in posting data to Azure Loganalytics.[amount_of_documents=#{amount_of_documents} documents=#{documents_json}]")
-                resend_message(documents_json, amount_of_documents, @logstashLoganalyticsConfiguration.retransmission_time)
+                resend_message(documents_json, amount_of_documents, @logAnalyticsConfiguration.retransmission_time)
             end
     end # end send_message_to_loganalytics
 
@@ -73,19 +73,19 @@ class LogStashAutoResizeBuffer
     # We would like to do it until we reached to the duration 
     def resend_message(documents_json, amount_of_documents, remaining_duration)
         if remaining_duration > 0
-            @logger.info("Resending #{amount_of_documents} documents as log type #{@custom_log_table_name} to DataCollector API in #{@logstashLoganalyticsConfiguration.RETRANSMISSION_DELAY} seconds.")
-            sleep @logstashLoganalyticsConfiguration.RETRANSMISSION_DELAY
+            @logger.info("Resending #{amount_of_documents} documents as log type #{@custom_log_table_name} to DataCollector API in #{@logAnalyticsConfiguration.RETRANSMISSION_DELAY} seconds.")
+            sleep @logAnalyticsConfiguration.RETRANSMISSION_DELAY
             begin
                 response = @client.post_data(documents_json,@custom_log_table_name)
                 if is_successfully_posted(response)
                     @logger.info("Successfully sent #{amount_of_documents} logs into custom log analytics table[#{@custom_log_table_name}] after resending.")
                 else
-                    @logger.debug("Resending #{amount_of_documents} documents failed (error code #{response.code}), will try to resend for #{(remaining_duration - @logstashLoganalyticsConfiguration.RETRANSMISSION_DELAY)}")
-                    resend_message(documents_json, amount_of_documents, (remaining_duration - @logstashLoganalyticsConfiguration.RETRANSMISSION_DELAY))
+                    @logger.debug("Resending #{amount_of_documents} documents failed (error code #{response.code}), will try to resend for #{(remaining_duration - @logAnalyticsConfiguration.RETRANSMISSION_DELAY)}")
+                    resend_message(documents_json, amount_of_documents, (remaining_duration - @logAnalyticsConfiguration.RETRANSMISSION_DELAY))
                 end
             rescue Exception => ex
-                @logger.debug("Resending #{amount_of_documents} documents failed (Exception: '#{ex}'), will try to resend for #{(remaining_duration - @logstashLoganalyticsConfiguration.RETRANSMISSION_DELAY)}")
-                resend_message(documents_json, amount_of_documents, (remaining_duration - @logstashLoganalyticsConfiguration.RETRANSMISSION_DELAY))
+                @logger.debug("Resending #{amount_of_documents} documents failed (Exception: '#{ex}'), will try to resend for #{(remaining_duration - @logAnalyticsConfiguration.RETRANSMISSION_DELAY)}")
+                resend_message(documents_json, amount_of_documents, (remaining_duration - @logAnalyticsConfiguration.RETRANSMISSION_DELAY))
             end
         else 
             @logger.error("Could not resend #{amount_of_documents} documents, message is dropped.")
@@ -99,23 +99,23 @@ class LogStashAutoResizeBuffer
     # Meaning that if we reached the max amount we would like to increase it.
     # Else we would like to decrease it(to reduce latency for messages)
     def change_message_limit_size(amount_of_documents, documents_byte_size)
-        new_buffer_size = @logstashLoganalyticsConfiguration.max_items
+        new_buffer_size = @logAnalyticsConfiguration.max_items
         average_document_size = documents_byte_size / amount_of_documents
         # If window is full we need to increase it 
         # "amount_of_documents" can be greater since buffer is not synchronized meaning 
         # that flush can occur after limit was reached.
-        if  amount_of_documents >= @logstashLoganalyticsConfiguration.max_items
+        if  amount_of_documents >= @logAnalyticsConfiguration.max_items
             # if doubling the size wouldn't exceed the API limit
-            if ((2 * @logstashLoganalyticsConfiguration.max_items) * average_document_size) < @logstashLoganalyticsConfiguration.MAX_SIZE_BYTES
-                new_buffer_size = 2 * @logstashLoganalyticsConfiguration.max_items
+            if ((2 * @logAnalyticsConfiguration.max_items) * average_document_size) < @logAnalyticsConfiguration.MAX_SIZE_BYTES
+                new_buffer_size = 2 * @logAnalyticsConfiguration.max_items
             else
-                new_buffer_size = (@logstashLoganalyticsConfiguration.MAX_SIZE_BYTES / average_document_size) -1000
+                new_buffer_size = (@logAnalyticsConfiguration.MAX_SIZE_BYTES / average_document_size) -1000
             end
 
         # We would like to decrease the window but not more then the MIN_MESSAGE_AMOUNT
         # We are trying to decrease it slowly to be able to send as much messages as we can in one window 
-        elsif amount_of_documents < @logstashLoganalyticsConfiguration.max_items and  @logstashLoganalyticsConfiguration.max_items != [(@logstashLoganalyticsConfiguration.max_items - @logstashLoganalyticsConfiguration.decrease_factor) ,@logstashLoganalyticsConfiguration.MIN_MESSAGE_AMOUNT].max
-            new_buffer_size = [(@logstashLoganalyticsConfiguration.max_items - @logstashLoganalyticsConfiguration.decrease_factor) ,@logstashLoganalyticsConfiguration.MIN_MESSAGE_AMOUNT].max
+        elsif amount_of_documents < @logAnalyticsConfiguration.max_items and  @logAnalyticsConfiguration.max_items != [(@logAnalyticsConfiguration.max_items - @logAnalyticsConfiguration.decrease_factor) ,@logAnalyticsConfiguration.MIN_MESSAGE_AMOUNT].max
+            new_buffer_size = [(@logAnalyticsConfiguration.max_items - @logAnalyticsConfiguration.decrease_factor) ,@logAnalyticsConfiguration.MIN_MESSAGE_AMOUNT].max
         end
 
         change_buffer_size(new_buffer_size)
@@ -128,7 +128,7 @@ class LogStashAutoResizeBuffer
         if @buffer_config[:max_items] != new_size
             old_buffer_size = @buffer_config[:max_items]
             @buffer_config[:max_items] = new_size
-            @logstashLoganalyticsConfiguration.max_items = new_size
+            @logAnalyticsConfiguration.max_items = new_size
             @logger.info("Changing buffer size.[configuration='#{old_buffer_size}' , new_size='#{new_size}']")
         else
             @logger.info("Buffer size wasn't changed.[configuration='#{old_buffer_size}' , new_size='#{new_size}']")
@@ -140,4 +140,4 @@ class LogStashAutoResizeBuffer
         return (response.code == 200) ? true : false
       end # def is_successfully_posted
 
-end # LogStashAutoResizeBuffer
+end # LogAnalyticsAutoResizeBuffer
